@@ -16,6 +16,7 @@ TourGuard ist eine Webanwendung zur Verwaltung und Sicherheit bei Bergtouren. Da
 - **Frontend**: React, TypeScript, Vite, MapLibre GL JS
 - **Backend**: Node.js, Express, PostgreSQL
 - **Deployment**: Docker, Docker Compose
+- **Testing**: Vitest, Jest, React Testing Library, Supertest
 - **Mapping**: MapLibre GL JS für Kartendarstellung
 - **SMS**: Integration für Benachrichtigungen
 
@@ -59,6 +60,30 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Testing
+
+TourGuard verfügt über ein umfassendes Test-Framework. Details siehe [TESTING.md](./TESTING.md).
+
+```bash
+# Alle Tests ausführen
+./run-tests.sh
+
+# Frontend Tests
+cd frontend && npm test
+
+# Backend Tests
+cd backend && npm test
+
+# Tests in Docker
+docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+```
+
+### Test Coverage
+
+- **Frontend**: Unit Tests, Component Tests, Integration Tests
+- **Backend**: Unit Tests, API Tests, Database Tests
+- **E2E**: Komplette User-Workflows
 
 ### Datenbank
 

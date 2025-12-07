@@ -1,0 +1,52 @@
+{
+    "name": "tourguard",
+    "version": "1.0.0",
+    "description": "TourGuard - Bergtour Sicherheitssystem mit GPS-Tracking und Notfall-Benachrichtigungen",
+    "private": true,
+    "scripts": {
+        "dev": "docker-compose up --build",
+        "start": "docker-compose up",
+        "stop": "docker-compose down",
+        "logs": "docker-compose logs -f",
+        "build": "docker-compose build",
+        "clean": "docker-compose down -v && docker system prune -f",
+        "test": "./run-tests.sh",
+        "test:docker": "docker-compose -f docker-compose.test.yml up --abort-on-container-exit",
+        "test:frontend": "cd frontend && npm test",
+        "test:backend": "cd backend && npm test",
+        "test:coverage": "npm run test:frontend -- --coverage && npm run test:backend -- --coverage",
+        "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+        "lint": "cd frontend && npm run lint && cd ../backend && npm run lint",
+        "db:setup": "docker-compose exec backend npm run db:migrate && docker-compose exec backend npm run db:seed",
+        "db:reset": "docker-compose exec backend npm run db:migrate:rollback && npm run db:setup"
+    },
+    "keywords": [
+        "bergsteigen",
+        "sicherheit",
+        "gps-tracking",
+        "notfall",
+        "alpine-safety",
+        "mountain-rescue"
+    ],
+    "author": "TourGuard Team",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/your-username/tourguard.git"
+    },
+    "bugs": {
+        "url": "https://github.com/your-username/tourguard/issues"
+    },
+    "homepage": "https://github.com/your-username/tourguard#readme",
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    },
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
