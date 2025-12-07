@@ -1,76 +1,62 @@
 import React, { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import DashboardPage from "./components/DashboardPage";
 
 type Page = "login" | "register" | "dashboard";
 
-interface User {
-	name: string;
-	email: string;
-}
-
-function App() {
+// Inner App component that uses AuthContext
+function AppContent() {
+	const { user, login, register, logout } = useAuth();
 	const [currentPage, setCurrentPage] = useState<Page>("login");
-	const [user, setUser] = useState<User | null>(null);
 
-	const handleLogin = (email: string, password: string) => {
-		// Einfache Demo-Anmeldung
-		if (email === "demo@tourguard.de" && password === "demo123") {
-			setUser({
-				name: "Demo Benutzer",
-				email: email,
-			});
+	const handleLogin = async (email: string, password: string) => {
+		try {
+			await login({ email, password });
 			setCurrentPage("dashboard");
-		} else {
-			alert(
-				"Ungültige Anmeldedaten. Verwenden Sie:\nE-Mail: demo@tourguard.de\nPasswort: demo123"
-			);
+		} catch (error: any) {
+			alert(error.message || "Anmeldung fehlgeschlagen");
 		}
 	};
 
 	const handleLogout = () => {
-		setUser(null);
+		logout();
 		setCurrentPage("login");
 	};
 
-	const handleRegister = (
+	const handleRegister = async (
 		email: string,
 		password: string,
 		name: string,
 		confirmPassword: string
 	) => {
-		// Validierung der Registrierungsdaten
+		// Frontend-Validierung
 		if (password !== confirmPassword) {
 			alert("Passwörter stimmen nicht überein!");
 			return;
 		}
 
-		// Passwort-Stärke prüfen
-		if (password.length < 8) {
-			alert("Das Passwort muss mindestens 8 Zeichen lang sein!");
+		if (password.length < 6) {
+			alert("Das Passwort muss mindestens 6 Zeichen lang sein!");
 			return;
 		}
 
-		// E-Mail-Format prüfen
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		if (!emailRegex.test(email)) {
 			alert("Bitte geben Sie eine gültige E-Mail-Adresse ein!");
 			return;
 		}
 
-		// Speichere den neuen Benutzer (in einer echten App würde dies an das Backend gesendet)
-		const newUser = {
-			name: name,
-			email: email,
-		};
-
-		setUser(newUser);
-		setCurrentPage("dashboard");
-
-		alert(
-			`🎉 Willkommen bei TourGuard, ${name}!\nIhr Konto wurde erfolgreich erstellt.`
-		);
+		try {
+			await register({ email, password, name });
+			setCurrentPage("dashboard");
+			alert(
+				`🎉 Willkommen bei TourGuard, ${name}!\nIhr Konto wurde erfolgreich erstellt.`
+			);
+		} catch (error: any) {
+			alert(error.message || "Registrierung fehlgeschlagen");
+		}
 	};
 
 	const handleSwitchToRegister = () => {
@@ -85,7 +71,7 @@ function App() {
 		alert("Tour-Erstellung wird implementiert! 🏔️");
 	};
 
-	if (currentPage === "login") {
+	if (currentPage === "login" && !user) {
 		return (
 			<LoginPage
 				onLogin={handleLogin}
@@ -94,7 +80,7 @@ function App() {
 		);
 	}
 
-	if (currentPage === "register") {
+	if (currentPage === "register" && !user) {
 		return (
 			<RegisterPage
 				onRegister={handleRegister}
@@ -103,10 +89,10 @@ function App() {
 		);
 	}
 
-	if (currentPage === "dashboard" && user) {
+	if ((currentPage === "dashboard" && user) || user) {
 		return (
 			<DashboardPage
-				user={user}
+				user={{ name: user.name, email: user.email }}
 				onLogout={handleLogout}
 				onCreateTour={handleCreateTour}
 			/>
@@ -114,6 +100,15 @@ function App() {
 	}
 
 	return <div>Fehler: Unbekannte Seite</div>;
+}
+
+// Main App component with AuthProvider
+function App() {
+	return (
+		<AuthProvider>
+			<AppContent />
+		</AuthProvider>
+	);
 }
 
 export default App;
