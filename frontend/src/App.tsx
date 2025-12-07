@@ -3,8 +3,9 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import DashboardPage from "./components/DashboardPage";
+import TourCreatePage from "./pages/TourCreatePage";
 
-type Page = "login" | "register" | "dashboard";
+type Page = "login" | "register" | "dashboard" | "create-tour";
 
 // Inner App component that uses AuthContext
 function AppContent() {
@@ -68,7 +69,15 @@ function AppContent() {
 	};
 
 	const handleCreateTour = () => {
-		alert("Tour-Erstellung wird implementiert! 🏔️");
+		setCurrentPage("create-tour");
+	};
+
+	const handleTourCreated = () => {
+		setCurrentPage("dashboard");
+	};
+
+	const handleCancelTourCreate = () => {
+		setCurrentPage("dashboard");
 	};
 
 	if (currentPage === "login" && !user) {
@@ -85,6 +94,15 @@ function AppContent() {
 			<RegisterPage
 				onRegister={handleRegister}
 				onSwitchToLogin={handleSwitchToLogin}
+			/>
+		);
+	}
+
+	if (currentPage === "create-tour" && user) {
+		return (
+			<TourCreatePage
+				onTourCreated={handleTourCreated}
+				onCancel={handleCancelTourCreate}
 			/>
 		);
 	}
