@@ -22,6 +22,8 @@ export interface Tour {
 	createdBy?: string;
 	checkedIn?: boolean;
 	checkedOut?: boolean;
+	checkinTime?: string;
+	checkoutTime?: string;
 }
 
 export interface Waypoint {

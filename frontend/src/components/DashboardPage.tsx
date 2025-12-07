@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { tourService } from "../services/api";
 import { Tour } from "../types/api";
+import TourDetailModal from "./TourDetailModal";
 
 interface DashboardPageProps {
 	user: { name: string; email: string };
@@ -18,6 +19,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 	const [tours, setTours] = useState<Tour[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	useEffect(() => {
 		loadTours();
@@ -35,6 +38,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const handleTourClick = (tour: Tour) => {
+		setSelectedTour(tour);
+		setIsModalOpen(true);
+	};
+
+	const handleCloseModal = () => {
+		setSelectedTour(null);
+		setIsModalOpen(false);
+	};
+
+	const handleTourUpdated = () => {
+		loadTours(); // Reload tours after update
+		handleCloseModal();
 	};
 
 	const getStatusColor = (status: string) => {
@@ -424,6 +442,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 											transition: "all 0.2s",
 											cursor: "pointer",
 										}}
+										onClick={() => handleTourClick(tour)}
 										onMouseEnter={(e: React.MouseEvent) => {
 											const target = e.currentTarget as HTMLElement;
 											target.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
@@ -580,6 +599,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 					</div>
 				</div>
 			</main>
+
+			{/* Tour Detail Modal */}
+			{selectedTour && (
+				<TourDetailModal
+					tour={selectedTour}
+					isOpen={isModalOpen}
+					onClose={handleCloseModal}
+					onTourUpdated={handleTourUpdated}
+				/>
+			)}
 		</div>
 	);
 };
