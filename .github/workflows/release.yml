@@ -18,10 +18,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: |
-            frontend/package-lock.json
-            backend/package-lock.json
 
       - name: Extract Version from Tag
         id: get_version
@@ -34,7 +30,14 @@ jobs:
       # Frontend Tests
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci with package-lock.json"
+            npm ci
+          else
+            echo "No package-lock.json found, using npm install"
+            npm install
+          fi
 
       - name: Run Frontend Tests
         working-directory: ./frontend
@@ -43,7 +46,14 @@ jobs:
       # Backend Tests
       - name: Install Backend Dependencies
         working-directory: ./backend
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "Using npm ci with package-lock.json"
+            npm ci
+          else
+            echo "No package-lock.json found, using npm install"
+            npm install
+          fi
 
       - name: Run Backend Tests
         working-directory: ./backend
