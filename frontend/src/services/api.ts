@@ -45,7 +45,7 @@ export const authService = {
 		password: string
 	): Promise<{ user: User; token: string }> {
 		const response = await api.post("/auth/login", { email, password });
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: { user, token } } zurück
 	},
 
 	async register(
@@ -58,38 +58,39 @@ export const authService = {
 			password,
 			name,
 		});
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: { user, token } } zurück
 	},
 
 	async getProfile(): Promise<User> {
 		const response = await api.get("/auth/profile");
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: user } zurück
 	},
 };
 
 export const tourService = {
 	async getTours(): Promise<Tour[]> {
 		const response = await api.get("/tours");
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tours } zurück
 	},
 
 	async getTour(id: string): Promise<Tour> {
 		const response = await api.get(`/tours/${id}`);
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 
 	async createTour(tourData: Partial<Tour>): Promise<Tour> {
 		const response = await api.post("/tours", tourData);
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 
 	async updateTour(id: string, tourData: Partial<Tour>): Promise<Tour> {
 		const response = await api.put(`/tours/${id}`, tourData);
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 
 	async deleteTour(id: string): Promise<void> {
 		await api.delete(`/tours/${id}`);
+		// DELETE gibt normalerweise keinen Body zurück
 	},
 
 	async uploadGPX(tourId: string, file: File): Promise<Tour> {
@@ -100,16 +101,16 @@ export const tourService = {
 				"Content-Type": "multipart/form-data",
 			},
 		});
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 
 	async checkin(tourId: string): Promise<Tour> {
 		const response = await api.post(`/tours/${tourId}/checkin`);
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 
 	async checkout(tourId: string): Promise<Tour> {
 		const response = await api.post(`/tours/${tourId}/checkout`);
-		return response.data;
+		return response.data.data; // Backend gibt { success: true, data: tour } zurück
 	},
 };
