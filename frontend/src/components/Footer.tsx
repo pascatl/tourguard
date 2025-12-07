@@ -1,4 +1,5 @@
 import React from "react";
+import { getAppVersion } from "../config/version";
 
 interface FooterProps {
 	onNavigateToImprint?: () => void;
@@ -28,10 +29,13 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToImprint }) => {
 				}}
 			>
 				{/* Links */}
-				<div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-					<span style={{ fontSize: "0.875rem", color: "#9ca3af" }}>
-						© 2025 TourGuard
-					</span>
+				{/* Links */}
+				<div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
+					{/* Version Info */}
+					<div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
+						v{getAppVersion()}
+					</div>
+
 					{onNavigateToImprint && (
 						<button
 							onClick={onNavigateToImprint}
@@ -39,16 +43,16 @@ const Footer: React.FC<FooterProps> = ({ onNavigateToImprint }) => {
 								background: "none",
 								border: "none",
 								color: "#60a5fa",
+								textDecoration: "underline",
 								cursor: "pointer",
 								fontSize: "0.875rem",
-								textDecoration: "underline",
+								padding: 0,
 							}}
 						>
 							Impressum
 						</button>
 					)}
-				</div>
-
+				</div>{" "}
 				{/* GitHub Link */}
 				<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
 					<a
