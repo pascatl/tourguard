@@ -1,0 +1,70 @@
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: tourguard
+      POSTGRES_PASSWORD: tourguard_password
+      POSTGRES_DB: tourguard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tourguard-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tourguard"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=tourguard
+      - DB_PASSWORD=tourguard_password
+      - DB_NAME=tourguard
+      - JWT_SECRET=your_jwt_secret_key_here
+      - SMS_API_KEY=your_sms_api_key_here
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - tourguard-network
+    command: npm run dev
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - tourguard-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  tourguard-network:
+    driver: bridge
