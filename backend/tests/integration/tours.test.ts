@@ -1,9 +1,9 @@
 import request from "supertest";
 import express from "express";
 import jwt from "jsonwebtoken";
-import { tourRoutes } from "../../src/routes/tourRoutes";
-import { authMiddleware } from "../../src/middleware/authMiddleware";
-import { testDb } from "../setup";
+import tourRoutes from "../../src/routes/tourRoutes";
+import { requireAuth } from "../../src/middleware/auth";
+import "../setup";
 
 const app = express();
 app.use(express.json());

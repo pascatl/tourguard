@@ -6,12 +6,14 @@ interface DashboardPageProps {
 	user: { name: string; email: string };
 	onLogout: () => void;
 	onCreateTour: () => void;
+	refreshTrigger?: number; // Trigger für Neuladung der Daten
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
 	user,
 	onLogout,
 	onCreateTour,
+	refreshTrigger,
 }) => {
 	const [tours, setTours] = useState<Tour[]>([]);
 	const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
 	useEffect(() => {
 		loadTours();
-	}, []);
+	}, [refreshTrigger]); // Lädt neu wenn refreshTrigger sich ändert
 
 	const loadTours = async () => {
 		try {

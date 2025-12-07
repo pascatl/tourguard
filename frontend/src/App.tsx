@@ -1,9 +1,12 @@
 import React, { useState } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import DashboardPage from "./components/DashboardPage";
 import TourCreatePage from "./pages/TourCreatePage";
+import { ToastService } from "./services/toastService";
 
 type Page = "login" | "register" | "dashboard" | "create-tour";
 
@@ -11,13 +14,18 @@ type Page = "login" | "register" | "dashboard" | "create-tour";
 function AppContent() {
 	const { user, login, register, logout } = useAuth();
 	const [currentPage, setCurrentPage] = useState<Page>("login");
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 	const handleLogin = async (email: string, password: string) => {
 		try {
 			await login({ email, password });
+			ToastService.success(`Willkommen zurück!`);
 			setCurrentPage("dashboard");
 		} catch (error: any) {
-			alert(error.message || "Anmeldung fehlgeschlagen");
+			ToastService.error(
+				error.message ||
+					"Anmeldung fehlgeschlagen. Bitte prüfen Sie Ihre Eingaben."
+			);
 		}
 	};
 
@@ -51,12 +59,15 @@ function AppContent() {
 
 		try {
 			await register({ email, password, name });
-			setCurrentPage("dashboard");
-			alert(
+			ToastService.success(
 				`🎉 Willkommen bei TourGuard, ${name}!\nIhr Konto wurde erfolgreich erstellt.`
 			);
+			setCurrentPage("dashboard");
 		} catch (error: any) {
-			alert(error.message || "Registrierung fehlgeschlagen");
+			ToastService.error(
+				error.message ||
+					"Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+			);
 		}
 	};
 
@@ -72,7 +83,11 @@ function AppContent() {
 		setCurrentPage("create-tour");
 	};
 
-	const handleTourCreated = () => {
+	const handleTourCreated = (tour: any) => {
+		ToastService.success(
+			`Tour "${tour?.name || "Neue Tour"}" wurde erfolgreich erstellt!`
+		);
+		setRefreshTrigger((prev) => prev + 1); // Trigger Dashboard refresh
 		setCurrentPage("dashboard");
 	};
 
@@ -113,6 +128,7 @@ function AppContent() {
 				user={{ name: user.name, email: user.email }}
 				onLogout={handleLogout}
 				onCreateTour={handleCreateTour}
+				refreshTrigger={refreshTrigger}
 			/>
 		);
 	}
@@ -125,6 +141,18 @@ function App() {
 	return (
 		<AuthProvider>
 			<AppContent />
+			<ToastContainer
+				position="top-right"
+				autoClose={5000}
+				hideProgressBar={false}
+				newestOnTop={false}
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="light"
+			/>
 		</AuthProvider>
 	);
 }

@@ -27,6 +27,8 @@ router.post(
 	auth,
 	[
 		body("name").notEmpty().withMessage("Tour name is required"),
+		body("startLocation").notEmpty().withMessage("Start location is required"),
+		body("endLocation").notEmpty().withMessage("End location is required"),
 		body("startTime").isISO8601().withMessage("Valid start time is required"),
 		body("expectedEndTime")
 			.isISO8601()
@@ -35,7 +37,7 @@ router.post(
 			.notEmpty()
 			.withMessage("Emergency contact name is required"),
 		body("emergencyContact.phone")
-			.isMobilePhone("de-DE")
+			.isMobilePhone("any")
 			.withMessage("Valid phone number is required"),
 	],
 	validateRequest,

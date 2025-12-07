@@ -1,7 +1,7 @@
 import request from "supertest";
 import express from "express";
-import { authRoutes } from "../../src/routes/authRoutes";
-import { testDb } from "../setup";
+import authRoutes from "../../src/routes/authRoutes";
+import "../setup";
 
 const app = express();
 app.use(express.json());

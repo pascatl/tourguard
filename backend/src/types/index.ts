@@ -2,11 +2,14 @@ export interface Tour {
 	id: string;
 	name: string;
 	description?: string;
+	startLocation: string;
+	endLocation: string;
 	startTime: Date;
 	expectedEndTime: Date;
 	actualEndTime?: Date;
 	status: TourStatus;
 	createdBy: string;
+	userId?: string;
 	createdAt: Date;
 	updatedAt: Date;
 	emergencyContact: EmergencyContact;

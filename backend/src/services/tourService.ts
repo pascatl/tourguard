@@ -21,6 +21,8 @@ export class TourService {
 			id: tour.id,
 			name: tour.name,
 			description: tour.description,
+			start_location: tour.startLocation,
+			end_location: tour.endLocation,
 			start_time: tour.startTime,
 			expected_end_time: tour.expectedEndTime,
 			status: tour.status,
@@ -46,11 +48,16 @@ export class TourService {
 	}
 
 	async getUserTours(userId: string): Promise<Tour[]> {
-		const toursData = await db("tours")
-			.where({ created_by: userId })
-			.orderBy("created_at", "desc");
+		try {
+			const toursData = await db("tours")
+				.where({ created_by: userId })
+				.orderBy("created_at", "desc");
 
-		return toursData.map((tour) => this.mapDbToTour(tour));
+			return toursData.map((tour) => this.mapDbToTour(tour));
+		} catch (error) {
+			console.error("Error getting user tours for userId:", userId, error);
+			throw error;
+		}
 	}
 
 	async updateTour(
@@ -72,6 +79,8 @@ export class TourService {
 			.update({
 				name: updatedTour.name,
 				description: updatedTour.description,
+				start_location: updatedTour.startLocation,
+				end_location: updatedTour.endLocation,
 				start_time: updatedTour.startTime,
 				expected_end_time: updatedTour.expectedEndTime,
 				status: updatedTour.status,
@@ -202,26 +211,51 @@ export class TourService {
 	}
 
 	private mapDbToTour(dbTour: any): Tour {
-		return {
-			id: dbTour.id,
-			name: dbTour.name,
-			description: dbTour.description,
-			startTime: dbTour.start_time,
-			expectedEndTime: dbTour.expected_end_time,
-			actualEndTime: dbTour.actual_end_time,
-			status: dbTour.status,
-			createdBy: dbTour.created_by,
-			createdAt: dbTour.created_at,
-			updatedAt: dbTour.updated_at,
-			emergencyContact: JSON.parse(dbTour.emergency_contact || "{}"),
-			route: JSON.parse(dbTour.route_data || "{}"),
-			equipment: JSON.parse(dbTour.equipment || "[]"),
-			participants: JSON.parse(dbTour.participants || "[]"),
-			checkedIn: dbTour.checked_in,
-			checkedOut: dbTour.checked_out,
-			checkinTime: dbTour.checkin_time,
-			checkoutTime: dbTour.checkout_time,
-		};
+		try {
+			console.log("Mapping DB tour:", JSON.stringify(dbTour, null, 2));
+
+			const tour = {
+				id: dbTour.id,
+				name: dbTour.name,
+				description: dbTour.description,
+				startLocation: dbTour.start_location,
+				endLocation: dbTour.end_location,
+				startTime: dbTour.start_time,
+				expectedEndTime: dbTour.expected_end_time,
+				actualEndTime: dbTour.actual_end_time,
+				status: dbTour.status,
+				createdBy: dbTour.created_by,
+				userId: dbTour.user_id || dbTour.created_by,
+				createdAt: dbTour.created_at,
+				updatedAt: dbTour.updated_at,
+				emergencyContact: this.safeJsonParse(dbTour.emergency_contact, {}),
+				route: this.safeJsonParse(dbTour.route_data, {}),
+				equipment: this.safeJsonParse(dbTour.equipment, []),
+				participants: this.safeJsonParse(dbTour.participants, []),
+				checkedIn: dbTour.checked_in,
+				checkedOut: dbTour.checked_out,
+				checkinTime: dbTour.checkin_time,
+				checkoutTime: dbTour.checkout_time,
+			};
+
+			console.log("Mapped tour:", JSON.stringify(tour, null, 2));
+			return tour;
+		} catch (error) {
+			console.error("Error mapping DB tour to Tour object:", error);
+			console.error("DB Tour data:", dbTour);
+			throw error;
+		}
+	}
+
+	private safeJsonParse(jsonString: any, defaultValue: any) {
+		try {
+			if (!jsonString) return defaultValue;
+			if (typeof jsonString === "object") return jsonString;
+			return JSON.parse(jsonString);
+		} catch (error) {
+			console.error("JSON parse error:", error, "for string:", jsonString);
+			return defaultValue;
+		}
 	}
 }
 
