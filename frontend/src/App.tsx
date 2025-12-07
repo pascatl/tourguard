@@ -6,9 +6,11 @@ import LoginPage from "./components/LoginPage";
 import RegisterPage from "./components/RegisterPage";
 import DashboardPage from "./components/DashboardPage";
 import TourCreatePage from "./pages/TourCreatePage";
+import ImprintPage from "./pages/ImprintPage";
+import Footer from "./components/Footer";
 import { ToastService } from "./services/toastService";
 
-type Page = "login" | "register" | "dashboard" | "create-tour";
+type Page = "login" | "register" | "dashboard" | "create-tour" | "imprint";
 
 // Inner App component that uses AuthContext
 function AppContent() {
@@ -95,41 +97,82 @@ function AppContent() {
 		setCurrentPage("dashboard");
 	};
 
+	const handleNavigateToImprint = () => {
+		setCurrentPage("imprint");
+	};
+
+	const handleBackFromImprint = () => {
+		// Gehe zurück zur vorherigen Seite oder Dashboard
+		setCurrentPage(user ? "dashboard" : "login");
+	};
+
+	if (currentPage === "imprint") {
+		return <ImprintPage onBack={handleBackFromImprint} />;
+	}
+
 	if (currentPage === "login" && !user) {
 		return (
-			<LoginPage
-				onLogin={handleLogin}
-				onSwitchToRegister={handleSwitchToRegister}
-			/>
+			<div
+				style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+			>
+				<div style={{ flex: 1 }}>
+					<LoginPage
+						onLogin={handleLogin}
+						onSwitchToRegister={handleSwitchToRegister}
+					/>
+				</div>
+				<Footer onNavigateToImprint={handleNavigateToImprint} />
+			</div>
 		);
 	}
 
 	if (currentPage === "register" && !user) {
 		return (
-			<RegisterPage
-				onRegister={handleRegister}
-				onSwitchToLogin={handleSwitchToLogin}
-			/>
+			<div
+				style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+			>
+				<div style={{ flex: 1 }}>
+					<RegisterPage
+						onRegister={handleRegister}
+						onSwitchToLogin={handleSwitchToLogin}
+					/>
+				</div>
+				<Footer onNavigateToImprint={handleNavigateToImprint} />
+			</div>
 		);
 	}
 
 	if (currentPage === "create-tour" && user) {
 		return (
-			<TourCreatePage
-				onTourCreated={handleTourCreated}
-				onCancel={handleCancelTourCreate}
-			/>
+			<div
+				style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+			>
+				<div style={{ flex: 1 }}>
+					<TourCreatePage
+						onTourCreated={handleTourCreated}
+						onCancel={handleCancelTourCreate}
+					/>
+				</div>
+				<Footer onNavigateToImprint={handleNavigateToImprint} />
+			</div>
 		);
 	}
 
 	if ((currentPage === "dashboard" && user) || user) {
 		return (
-			<DashboardPage
-				user={{ name: user.name, email: user.email }}
-				onLogout={handleLogout}
-				onCreateTour={handleCreateTour}
-				refreshTrigger={refreshTrigger}
-			/>
+			<div
+				style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+			>
+				<div style={{ flex: 1 }}>
+					<DashboardPage
+						user={{ name: user.name, email: user.email }}
+						onLogout={handleLogout}
+						onCreateTour={handleCreateTour}
+						refreshTrigger={refreshTrigger}
+					/>
+				</div>
+				<Footer onNavigateToImprint={handleNavigateToImprint} />
+			</div>
 		);
 	}
 

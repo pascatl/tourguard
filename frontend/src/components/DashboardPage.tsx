@@ -145,20 +145,40 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							Willkommen, {user.name}
 						</span>
 					</div>
-					<button
-						onClick={onLogout}
-						style={{
-							backgroundColor: "#6b7280",
-							color: "white",
-							padding: "8px 16px",
-							border: "none",
-							borderRadius: "6px",
-							fontSize: "14px",
-							cursor: "pointer",
-						}}
-					>
-						Abmelden
-					</button>
+					<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+						<button
+							onClick={onCreateTour}
+							style={{
+								backgroundColor: "#3b82f6",
+								color: "white",
+								padding: "8px 16px",
+								border: "none",
+								borderRadius: "6px",
+								fontSize: "14px",
+								fontWeight: "600",
+								cursor: "pointer",
+								display: "flex",
+								alignItems: "center",
+								gap: "6px",
+							}}
+						>
+							➕ Neue Tour
+						</button>
+						<button
+							onClick={onLogout}
+							style={{
+								backgroundColor: "#6b7280",
+								color: "white",
+								padding: "8px 16px",
+								border: "none",
+								borderRadius: "6px",
+								fontSize: "14px",
+								cursor: "pointer",
+							}}
+						>
+							Abmelden
+						</button>
+					</div>
 				</div>
 			</header>
 
@@ -292,48 +312,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 							{stats.completed}
 						</p>
 					</div>
-				</div>
-
-				{/* Action Section */}
-				<div
-					style={{
-						backgroundColor: "white",
-						padding: "20px",
-						borderRadius: "12px",
-						boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-						marginBottom: "30px",
-						textAlign: "center",
-					}}
-				>
-					<h2
-						style={{
-							fontSize: "1.25rem",
-							fontWeight: "600",
-							color: "#1f2937",
-							marginBottom: "15px",
-						}}
-					>
-						Tour Management
-					</h2>
-					<button
-						onClick={onCreateTour}
-						style={{
-							backgroundColor: "#3b82f6",
-							color: "white",
-							padding: "12px 24px",
-							border: "none",
-							borderRadius: "8px",
-							fontSize: "16px",
-							fontWeight: "600",
-							cursor: "pointer",
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							margin: "0 auto",
-						}}
-					>
-						➕ Neue Tour erstellen
-					</button>
 				</div>
 
 				{/* Tours List */}
