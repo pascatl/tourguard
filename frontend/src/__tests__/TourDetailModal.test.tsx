@@ -4,6 +4,7 @@ import "@testing-library/jest-dom";
 import TourDetailModal from "../components/TourDetailModal";
 import { tourService } from "../services/api";
 import { Tour } from "../types/api";
+import { ToastService } from "../services/toastService";
 
 // Mock the API service
 vi.mock("../services/api", () => ({
@@ -11,6 +12,15 @@ vi.mock("../services/api", () => ({
 		updateTour: vi.fn(),
 		checkin: vi.fn(),
 		checkout: vi.fn(),
+		deleteTour: vi.fn(),
+	},
+}));
+
+// Mock the ToastService
+vi.mock("../services/toastService", () => ({
+	ToastService: {
+		success: vi.fn(),
+		error: vi.fn(),
 	},
 }));
 
@@ -277,5 +287,140 @@ describe("TourDetailModal", () => {
 		);
 
 		expect(screen.queryByText("Tour Details")).not.toBeInTheDocument();
+	});
+
+	it("shows delete button for all tours", () => {
+		render(
+			<TourDetailModal
+				tour={mockTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		expect(screen.getByText("🗑️ Löschen")).toBeInTheDocument();
+	});
+
+	it("shows delete confirmation dialog when delete button is clicked", async () => {
+		render(
+			<TourDetailModal
+				tour={mockTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		fireEvent.click(screen.getByText("🗑️ Löschen"));
+
+		await waitFor(() => {
+			expect(screen.getByText("Tour löschen")).toBeInTheDocument();
+			expect(screen.getByText(/Sind Sie sicher/)).toBeInTheDocument();
+			expect(screen.getByText('"Test Tour"')).toBeInTheDocument();
+		});
+	});
+
+	it("cancels delete when cancel button is clicked", async () => {
+		render(
+			<TourDetailModal
+				tour={mockTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		fireEvent.click(screen.getByText("🗑️ Löschen"));
+
+		await waitFor(() => {
+			expect(screen.getByText("Abbrechen")).toBeInTheDocument();
+		});
+
+		fireEvent.click(screen.getByText("Abbrechen"));
+
+		await waitFor(() => {
+			expect(screen.queryByText("Tour löschen")).not.toBeInTheDocument();
+		});
+	});
+
+	it("calls deleteTour API when delete is confirmed", async () => {
+		const mockDeleteTour = vi.mocked(tourService.deleteTour);
+		mockDeleteTour.mockResolvedValue();
+
+		render(
+			<TourDetailModal
+				tour={mockTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		fireEvent.click(screen.getByText("🗑️ Löschen"));
+
+		await waitFor(() => {
+			expect(screen.getByText("Tour löschen")).toBeInTheDocument();
+		});
+
+		// Click the confirm delete button in the dialog
+		fireEvent.click(screen.getByText("Löschen"));
+
+		await waitFor(() => {
+			expect(mockDeleteTour).toHaveBeenCalledWith("1");
+			expect(mockOnTourUpdated).toHaveBeenCalled();
+			expect(ToastService.success).toHaveBeenCalledWith(
+				'Tour "Test Tour" wurde erfolgreich gelöscht'
+			);
+		});
+	});
+
+	it("handles delete API errors gracefully", async () => {
+		const mockDeleteTour = vi.mocked(tourService.deleteTour);
+		mockDeleteTour.mockRejectedValue(new Error("API Error"));
+
+		render(
+			<TourDetailModal
+				tour={mockTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		fireEvent.click(screen.getByText("🗑️ Löschen"));
+
+		await waitFor(() => {
+			expect(screen.getByText("Tour löschen")).toBeInTheDocument();
+		});
+
+		fireEvent.click(screen.getByText("Löschen"));
+
+		await waitFor(() => {
+			expect(
+				screen.getByText("Fehler beim Löschen der Tour")
+			).toBeInTheDocument();
+		});
+	});
+
+	it("can delete tours regardless of status", () => {
+		const completedTour: Tour = {
+			...mockTour,
+			status: "completed",
+			checkedIn: true,
+			checkedOut: true,
+		};
+
+		render(
+			<TourDetailModal
+				tour={completedTour}
+				isOpen={true}
+				onClose={mockOnClose}
+				onTourUpdated={mockOnTourUpdated}
+			/>
+		);
+
+		// Delete button should be available even for completed tours
+		expect(screen.getByText("🗑️ Löschen")).toBeInTheDocument();
 	});
 });

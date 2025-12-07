@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Tour } from "../types/api";
 import { tourService } from "../services/api";
+import { ToastService } from "../services/toastService";
 
 interface TourDetailModalProps {
 	tour: Tour;
@@ -19,6 +20,7 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 	const [loading, setLoading] = useState(false);
 	const [editedTour, setEditedTour] = useState<Partial<Tour>>({});
 	const [error, setError] = useState<string | null>(null);
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
 	useEffect(() => {
 		setEditedTour({
@@ -77,6 +79,25 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 		}
 	};
 
+	const handleDelete = async () => {
+		try {
+			setLoading(true);
+			setError(null);
+			await tourService.deleteTour(tour.id);
+			setShowDeleteConfirm(false);
+
+			// Toast-Benachrichtigung für erfolgreiches Löschen
+			ToastService.success(`Tour "${tour.name}" wurde erfolgreich gelöscht`);
+
+			onTourUpdated(); // This will refresh the tour list and close the modal
+		} catch (error: any) {
+			console.error("Fehler beim Löschen:", error);
+			setError("Fehler beim Löschen der Tour");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const formatDate = (dateString: string) => {
 		return new Date(dateString).toLocaleDateString("de-DE", {
 			year: "numeric",
@@ -122,132 +143,199 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 		tour.status === "active" && tour.checkedIn && !tour.checkedOut;
 
 	return (
-		<div
-			style={{
-				position: "fixed",
-				top: 0,
-				left: 0,
-				right: 0,
-				bottom: 0,
-				backgroundColor: "rgba(0, 0, 0, 0.5)",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				zIndex: 1000,
-				padding: "20px",
-			}}
-			onClick={onClose}
-		>
+		<>
 			<div
 				style={{
-					backgroundColor: "white",
-					borderRadius: "12px",
-					maxWidth: "600px",
-					width: "100%",
-					maxHeight: "90vh",
-					overflow: "auto",
-					boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+					position: "fixed",
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					backgroundColor: "rgba(0, 0, 0, 0.5)",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
+					zIndex: 1000,
+					padding: "20px",
 				}}
-				onClick={(e) => e.stopPropagation()}
+				onClick={onClose}
 			>
-				{/* Header */}
 				<div
 					style={{
-						padding: "20px",
-						borderBottom: "1px solid #e5e7eb",
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
+						backgroundColor: "white",
+						borderRadius: "12px",
+						maxWidth: "600px",
+						width: "100%",
+						maxHeight: "90vh",
+						overflow: "auto",
+						boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
 					}}
+					onClick={(e) => e.stopPropagation()}
 				>
-					<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-						<h2
-							style={{
-								fontSize: "1.5rem",
-								fontWeight: "600",
-								color: "#1f2937",
-								margin: 0,
-							}}
-						>
-							{isEditing ? "Tour bearbeiten" : "Tour Details"}
-						</h2>
-						<span
-							style={{
-								backgroundColor: getStatusColor(tour.status),
-								color: "white",
-								padding: "4px 12px",
-								borderRadius: "12px",
-								fontSize: "12px",
-								fontWeight: "600",
-							}}
-						>
-							{getStatusText(tour.status)}
-						</span>
-					</div>
-					<button
-						onClick={onClose}
-						style={{
-							background: "none",
-							border: "none",
-							fontSize: "24px",
-							cursor: "pointer",
-							color: "#6b7280",
-							padding: "4px",
-						}}
-					>
-						✕
-					</button>
-				</div>
-
-				{/* Content */}
-				<div style={{ padding: "20px" }}>
-					{error && (
-						<div
-							style={{
-								backgroundColor: "#fee2e2",
-								border: "1px solid #fecaca",
-								color: "#dc2626",
-								padding: "12px",
-								borderRadius: "6px",
-								marginBottom: "20px",
-							}}
-						>
-							{error}
-						</div>
-					)}
-
-					{/* Action Buttons */}
+					{/* Header */}
 					<div
 						style={{
+							padding: "20px",
+							borderBottom: "1px solid #e5e7eb",
 							display: "flex",
-							gap: "10px",
-							marginBottom: "20px",
-							flexWrap: "wrap",
+							justifyContent: "space-between",
+							alignItems: "center",
 						}}
 					>
-						{!isEditing ? (
-							<>
-								<button
-									onClick={() => setIsEditing(true)}
-									style={{
-										backgroundColor: "#3b82f6",
-										color: "white",
-										padding: "8px 16px",
-										border: "none",
-										borderRadius: "6px",
-										fontSize: "14px",
-										cursor: "pointer",
-										display: "flex",
-										alignItems: "center",
-										gap: "6px",
-									}}
-								>
-									✏️ Bearbeiten
-								</button>
+						<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+							<h2
+								style={{
+									fontSize: "1.5rem",
+									fontWeight: "600",
+									color: "#1f2937",
+									margin: 0,
+								}}
+							>
+								{isEditing ? "Tour bearbeiten" : "Tour Details"}
+							</h2>
+							<span
+								style={{
+									backgroundColor: getStatusColor(tour.status),
+									color: "white",
+									padding: "4px 12px",
+									borderRadius: "12px",
+									fontSize: "12px",
+									fontWeight: "600",
+								}}
+							>
+								{getStatusText(tour.status)}
+							</span>
+						</div>
+						<button
+							onClick={onClose}
+							style={{
+								background: "none",
+								border: "none",
+								fontSize: "24px",
+								cursor: "pointer",
+								color: "#6b7280",
+								padding: "4px",
+							}}
+						>
+							✕
+						</button>
+					</div>
 
-								{canCheckin && (
+					{/* Content */}
+					<div style={{ padding: "20px" }}>
+						{error && (
+							<div
+								style={{
+									backgroundColor: "#fee2e2",
+									border: "1px solid #fecaca",
+									color: "#dc2626",
+									padding: "12px",
+									borderRadius: "6px",
+									marginBottom: "20px",
+								}}
+							>
+								{error}
+							</div>
+						)}
+
+						{/* Action Buttons */}
+						<div
+							style={{
+								display: "flex",
+								gap: "10px",
+								marginBottom: "20px",
+								flexWrap: "wrap",
+							}}
+						>
+							{!isEditing ? (
+								<>
 									<button
-										onClick={handleCheckin}
+										onClick={() => setIsEditing(true)}
+										style={{
+											backgroundColor: "#3b82f6",
+											color: "white",
+											padding: "8px 16px",
+											border: "none",
+											borderRadius: "6px",
+											fontSize: "14px",
+											cursor: "pointer",
+											display: "flex",
+											alignItems: "center",
+											gap: "6px",
+										}}
+									>
+										✏️ Bearbeiten
+									</button>
+
+									{canCheckin && (
+										<button
+											onClick={handleCheckin}
+											disabled={loading}
+											style={{
+												backgroundColor: "#10b981",
+												color: "white",
+												padding: "8px 16px",
+												border: "none",
+												borderRadius: "6px",
+												fontSize: "14px",
+												cursor: loading ? "not-allowed" : "pointer",
+												opacity: loading ? 0.6 : 1,
+												display: "flex",
+												alignItems: "center",
+												gap: "6px",
+											}}
+										>
+											📍 Check-in
+										</button>
+									)}
+
+									{canCheckout && (
+										<button
+											onClick={handleCheckout}
+											disabled={loading}
+											style={{
+												backgroundColor: "#ef4444",
+												color: "white",
+												padding: "8px 16px",
+												border: "none",
+												borderRadius: "6px",
+												fontSize: "14px",
+												cursor: loading ? "not-allowed" : "pointer",
+												opacity: loading ? 0.6 : 1,
+												display: "flex",
+												alignItems: "center",
+												gap: "6px",
+											}}
+										>
+											🏁 Check-out
+										</button>
+									)}
+
+									<button
+										onClick={() => setShowDeleteConfirm(true)}
+										disabled={loading}
+										style={{
+											backgroundColor: "#dc2626",
+											color: "white",
+											padding: "8px 16px",
+											border: "none",
+											borderRadius: "6px",
+											fontSize: "14px",
+											cursor: loading ? "not-allowed" : "pointer",
+											opacity: loading ? 0.6 : 1,
+											display: "flex",
+											alignItems: "center",
+											gap: "6px",
+											marginLeft: "auto", // Push delete button to the right
+										}}
+									>
+										🗑️ Löschen
+									</button>
+								</>
+							) : (
+								<>
+									<button
+										onClick={handleSave}
 										disabled={loading}
 										style={{
 											backgroundColor: "#10b981",
@@ -258,183 +346,39 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 											fontSize: "14px",
 											cursor: loading ? "not-allowed" : "pointer",
 											opacity: loading ? 0.6 : 1,
-											display: "flex",
-											alignItems: "center",
-											gap: "6px",
 										}}
 									>
-										📍 Check-in
+										{loading ? "Speichere..." : "Speichern"}
 									</button>
-								)}
-
-								{canCheckout && (
 									<button
-										onClick={handleCheckout}
-										disabled={loading}
+										onClick={() => {
+											setIsEditing(false);
+											setError(null);
+										}}
 										style={{
-											backgroundColor: "#ef4444",
+											backgroundColor: "#6b7280",
 											color: "white",
 											padding: "8px 16px",
 											border: "none",
 											borderRadius: "6px",
 											fontSize: "14px",
-											cursor: loading ? "not-allowed" : "pointer",
-											opacity: loading ? 0.6 : 1,
-											display: "flex",
-											alignItems: "center",
-											gap: "6px",
+											cursor: "pointer",
 										}}
 									>
-										🏁 Check-out
+										Abbrechen
 									</button>
-								)}
-							</>
-						) : (
-							<>
-								<button
-									onClick={handleSave}
-									disabled={loading}
-									style={{
-										backgroundColor: "#10b981",
-										color: "white",
-										padding: "8px 16px",
-										border: "none",
-										borderRadius: "6px",
-										fontSize: "14px",
-										cursor: loading ? "not-allowed" : "pointer",
-										opacity: loading ? 0.6 : 1,
-									}}
-								>
-									{loading ? "Speichere..." : "Speichern"}
-								</button>
-								<button
-									onClick={() => {
-										setIsEditing(false);
-										setError(null);
-									}}
-									style={{
-										backgroundColor: "#6b7280",
-										color: "white",
-										padding: "8px 16px",
-										border: "none",
-										borderRadius: "6px",
-										fontSize: "14px",
-										cursor: "pointer",
-									}}
-								>
-									Abbrechen
-								</button>
-							</>
-						)}
-					</div>
-
-					{/* Tour Details */}
-					<div
-						style={{
-							display: "grid",
-							gap: "15px",
-						}}
-					>
-						{/* Name */}
-						<div>
-							<label
-								style={{
-									display: "block",
-									fontSize: "14px",
-									fontWeight: "500",
-									color: "#374151",
-									marginBottom: "5px",
-								}}
-							>
-								Tour Name
-							</label>
-							{isEditing ? (
-								<input
-									type="text"
-									value={editedTour.name || ""}
-									onChange={(e) =>
-										setEditedTour({ ...editedTour, name: e.target.value })
-									}
-									style={{
-										width: "100%",
-										padding: "8px 12px",
-										border: "1px solid #d1d5db",
-										borderRadius: "6px",
-										fontSize: "14px",
-										boxSizing: "border-box",
-									}}
-								/>
-							) : (
-								<p
-									style={{
-										margin: 0,
-										padding: "8px 12px",
-										backgroundColor: "#f9fafb",
-										borderRadius: "6px",
-										fontSize: "14px",
-									}}
-								>
-									{tour.name}
-								</p>
+								</>
 							)}
 						</div>
 
-						{/* Description */}
-						<div>
-							<label
-								style={{
-									display: "block",
-									fontSize: "14px",
-									fontWeight: "500",
-									color: "#374151",
-									marginBottom: "5px",
-								}}
-							>
-								Beschreibung
-							</label>
-							{isEditing ? (
-								<textarea
-									value={editedTour.description || ""}
-									onChange={(e) =>
-										setEditedTour({
-											...editedTour,
-											description: e.target.value,
-										})
-									}
-									rows={3}
-									style={{
-										width: "100%",
-										padding: "8px 12px",
-										border: "1px solid #d1d5db",
-										borderRadius: "6px",
-										fontSize: "14px",
-										boxSizing: "border-box",
-										resize: "vertical",
-									}}
-								/>
-							) : (
-								<p
-									style={{
-										margin: 0,
-										padding: "8px 12px",
-										backgroundColor: "#f9fafb",
-										borderRadius: "6px",
-										fontSize: "14px",
-									}}
-								>
-									{tour.description || "Keine Beschreibung"}
-								</p>
-							)}
-						</div>
-
-						{/* Locations */}
+						{/* Tour Details */}
 						<div
 							style={{
 								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
 								gap: "15px",
 							}}
 						>
+							{/* Name */}
 							<div>
 								<label
 									style={{
@@ -445,17 +389,14 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 										marginBottom: "5px",
 									}}
 								>
-									Startort
+									Tour Name
 								</label>
 								{isEditing ? (
 									<input
 										type="text"
-										value={editedTour.startLocation || ""}
+										value={editedTour.name || ""}
 										onChange={(e) =>
-											setEditedTour({
-												...editedTour,
-												startLocation: e.target.value,
-											})
+											setEditedTour({ ...editedTour, name: e.target.value })
 										}
 										style={{
 											width: "100%",
@@ -476,11 +417,12 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 											fontSize: "14px",
 										}}
 									>
-										{tour.startLocation}
+										{tour.name}
 									</p>
 								)}
 							</div>
 
+							{/* Description */}
 							<div>
 								<label
 									style={{
@@ -491,18 +433,18 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 										marginBottom: "5px",
 									}}
 								>
-									Zielort
+									Beschreibung
 								</label>
 								{isEditing ? (
-									<input
-										type="text"
-										value={editedTour.endLocation || ""}
+									<textarea
+										value={editedTour.description || ""}
 										onChange={(e) =>
 											setEditedTour({
 												...editedTour,
-												endLocation: e.target.value,
+												description: e.target.value,
 											})
 										}
+										rows={3}
 										style={{
 											width: "100%",
 											padding: "8px 12px",
@@ -510,6 +452,7 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 											borderRadius: "6px",
 											fontSize: "14px",
 											boxSizing: "border-box",
+											resize: "vertical",
 										}}
 									/>
 								) : (
@@ -522,262 +465,471 @@ const TourDetailModal: React.FC<TourDetailModalProps> = ({
 											fontSize: "14px",
 										}}
 									>
-										{tour.endLocation || "Keine Angabe"}
-									</p>
-								)}
-							</div>
-						</div>
-
-						{/* Times */}
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
-								gap: "15px",
-							}}
-						>
-							<div>
-								<label
-									style={{
-										display: "block",
-										fontSize: "14px",
-										fontWeight: "500",
-										color: "#374151",
-										marginBottom: "5px",
-									}}
-								>
-									Startzeit
-								</label>
-								{isEditing ? (
-									<input
-										type="datetime-local"
-										value={
-											editedTour.startTime
-												? new Date(editedTour.startTime)
-														.toISOString()
-														.slice(0, 16)
-												: ""
-										}
-										onChange={(e) =>
-											setEditedTour({
-												...editedTour,
-												startTime: new Date(e.target.value).toISOString(),
-											})
-										}
-										style={{
-											width: "100%",
-											padding: "8px 12px",
-											border: "1px solid #d1d5db",
-											borderRadius: "6px",
-											fontSize: "14px",
-											boxSizing: "border-box",
-										}}
-									/>
-								) : (
-									<p
-										style={{
-											margin: 0,
-											padding: "8px 12px",
-											backgroundColor: "#f9fafb",
-											borderRadius: "6px",
-											fontSize: "14px",
-										}}
-									>
-										{formatDate(tour.startTime)}
+										{tour.description || "Keine Beschreibung"}
 									</p>
 								)}
 							</div>
 
-							<div>
-								<label
-									style={{
-										display: "block",
-										fontSize: "14px",
-										fontWeight: "500",
-										color: "#374151",
-										marginBottom: "5px",
-									}}
-								>
-									Geplantes Ende
-								</label>
-								{isEditing ? (
-									<input
-										type="datetime-local"
-										value={
-											editedTour.expectedEndTime
-												? new Date(editedTour.expectedEndTime)
-														.toISOString()
-														.slice(0, 16)
-												: ""
-										}
-										onChange={(e) =>
-											setEditedTour({
-												...editedTour,
-												expectedEndTime: new Date(e.target.value).toISOString(),
-											})
-										}
-										style={{
-											width: "100%",
-											padding: "8px 12px",
-											border: "1px solid #d1d5db",
-											borderRadius: "6px",
-											fontSize: "14px",
-											boxSizing: "border-box",
-										}}
-									/>
-								) : (
-									<p
-										style={{
-											margin: 0,
-											padding: "8px 12px",
-											backgroundColor: "#f9fafb",
-											borderRadius: "6px",
-											fontSize: "14px",
-										}}
-									>
-										{formatDate(tour.expectedEndTime)}
-									</p>
-								)}
-							</div>
-						</div>
-
-						{/* Emergency Contact */}
-						<div>
-							<label
-								style={{
-									display: "block",
-									fontSize: "14px",
-									fontWeight: "500",
-									color: "#374151",
-									marginBottom: "5px",
-								}}
-							>
-								Notfallkontakt
-							</label>
-							{isEditing ? (
-								<div
-									style={{
-										display: "grid",
-										gridTemplateColumns: "1fr 1fr",
-										gap: "10px",
-									}}
-								>
-									<input
-										type="text"
-										placeholder="Name"
-										value={editedTour.emergencyContact?.name || ""}
-										onChange={(e) =>
-											setEditedTour({
-												...editedTour,
-												emergencyContact: {
-													...editedTour.emergencyContact,
-													name: e.target.value,
-													phone: editedTour.emergencyContact?.phone || "",
-												},
-											})
-										}
-										style={{
-											width: "100%",
-											padding: "8px 12px",
-											border: "1px solid #d1d5db",
-											borderRadius: "6px",
-											fontSize: "14px",
-											boxSizing: "border-box",
-										}}
-									/>
-									<input
-										type="tel"
-										placeholder="Telefon"
-										value={editedTour.emergencyContact?.phone || ""}
-										onChange={(e) =>
-											setEditedTour({
-												...editedTour,
-												emergencyContact: {
-													name: editedTour.emergencyContact?.name || "",
-													phone: e.target.value,
-												},
-											})
-										}
-										style={{
-											width: "100%",
-											padding: "8px 12px",
-											border: "1px solid #d1d5db",
-											borderRadius: "6px",
-											fontSize: "14px",
-											boxSizing: "border-box",
-										}}
-									/>
-								</div>
-							) : (
-								<p
-									style={{
-										margin: 0,
-										padding: "8px 12px",
-										backgroundColor: "#f9fafb",
-										borderRadius: "6px",
-										fontSize: "14px",
-									}}
-								>
-									{tour.emergencyContact?.name} - {tour.emergencyContact?.phone}
-								</p>
-							)}
-						</div>
-
-						{/* Status Info */}
-						{(tour.checkedIn || tour.checkedOut) && (
+							{/* Locations */}
 							<div
 								style={{
-									backgroundColor: "#f0fdf4",
-									border: "1px solid #bbf7d0",
-									padding: "12px",
-									borderRadius: "6px",
-									marginTop: "10px",
+									display: "grid",
+									gridTemplateColumns: "1fr 1fr",
+									gap: "15px",
 								}}
 							>
-								<h4
+								<div>
+									<label
+										style={{
+											display: "block",
+											fontSize: "14px",
+											fontWeight: "500",
+											color: "#374151",
+											marginBottom: "5px",
+										}}
+									>
+										Startort
+									</label>
+									{isEditing ? (
+										<input
+											type="text"
+											value={editedTour.startLocation || ""}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													startLocation: e.target.value,
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+									) : (
+										<p
+											style={{
+												margin: 0,
+												padding: "8px 12px",
+												backgroundColor: "#f9fafb",
+												borderRadius: "6px",
+												fontSize: "14px",
+											}}
+										>
+											{tour.startLocation}
+										</p>
+									)}
+								</div>
+
+								<div>
+									<label
+										style={{
+											display: "block",
+											fontSize: "14px",
+											fontWeight: "500",
+											color: "#374151",
+											marginBottom: "5px",
+										}}
+									>
+										Zielort
+									</label>
+									{isEditing ? (
+										<input
+											type="text"
+											value={editedTour.endLocation || ""}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													endLocation: e.target.value,
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+									) : (
+										<p
+											style={{
+												margin: 0,
+												padding: "8px 12px",
+												backgroundColor: "#f9fafb",
+												borderRadius: "6px",
+												fontSize: "14px",
+											}}
+										>
+											{tour.endLocation || "Keine Angabe"}
+										</p>
+									)}
+								</div>
+							</div>
+
+							{/* Times */}
+							<div
+								style={{
+									display: "grid",
+									gridTemplateColumns: "1fr 1fr",
+									gap: "15px",
+								}}
+							>
+								<div>
+									<label
+										style={{
+											display: "block",
+											fontSize: "14px",
+											fontWeight: "500",
+											color: "#374151",
+											marginBottom: "5px",
+										}}
+									>
+										Startzeit
+									</label>
+									{isEditing ? (
+										<input
+											type="datetime-local"
+											value={
+												editedTour.startTime
+													? new Date(editedTour.startTime)
+															.toISOString()
+															.slice(0, 16)
+													: ""
+											}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													startTime: new Date(e.target.value).toISOString(),
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+									) : (
+										<p
+											style={{
+												margin: 0,
+												padding: "8px 12px",
+												backgroundColor: "#f9fafb",
+												borderRadius: "6px",
+												fontSize: "14px",
+											}}
+										>
+											{formatDate(tour.startTime)}
+										</p>
+									)}
+								</div>
+
+								<div>
+									<label
+										style={{
+											display: "block",
+											fontSize: "14px",
+											fontWeight: "500",
+											color: "#374151",
+											marginBottom: "5px",
+										}}
+									>
+										Geplantes Ende
+									</label>
+									{isEditing ? (
+										<input
+											type="datetime-local"
+											value={
+												editedTour.expectedEndTime
+													? new Date(editedTour.expectedEndTime)
+															.toISOString()
+															.slice(0, 16)
+													: ""
+											}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													expectedEndTime: new Date(
+														e.target.value
+													).toISOString(),
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+									) : (
+										<p
+											style={{
+												margin: 0,
+												padding: "8px 12px",
+												backgroundColor: "#f9fafb",
+												borderRadius: "6px",
+												fontSize: "14px",
+											}}
+										>
+											{formatDate(tour.expectedEndTime)}
+										</p>
+									)}
+								</div>
+							</div>
+
+							{/* Emergency Contact */}
+							<div>
+								<label
 									style={{
-										margin: "0 0 8px 0",
+										display: "block",
 										fontSize: "14px",
-										fontWeight: "600",
-										color: "#15803d",
+										fontWeight: "500",
+										color: "#374151",
+										marginBottom: "5px",
 									}}
 								>
-									Check-in/Check-out Status
-								</h4>
-								{tour.checkedIn && (
-									<p
+									Notfallkontakt
+								</label>
+								{isEditing ? (
+									<div
 										style={{
-											margin: "4px 0",
-											fontSize: "13px",
-											color: "#166534",
+											display: "grid",
+											gridTemplateColumns: "1fr 1fr",
+											gap: "10px",
 										}}
 									>
-										✅ Check-in:{" "}
-										{tour.checkinTime
-											? formatDate(tour.checkinTime)
-											: "Zeit nicht verfügbar"}
-									</p>
-								)}
-								{tour.checkedOut && (
+										<input
+											type="text"
+											placeholder="Name"
+											value={editedTour.emergencyContact?.name || ""}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													emergencyContact: {
+														...editedTour.emergencyContact,
+														name: e.target.value,
+														phone: editedTour.emergencyContact?.phone || "",
+													},
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+										<input
+											type="tel"
+											placeholder="Telefon"
+											value={editedTour.emergencyContact?.phone || ""}
+											onChange={(e) =>
+												setEditedTour({
+													...editedTour,
+													emergencyContact: {
+														name: editedTour.emergencyContact?.name || "",
+														phone: e.target.value,
+													},
+												})
+											}
+											style={{
+												width: "100%",
+												padding: "8px 12px",
+												border: "1px solid #d1d5db",
+												borderRadius: "6px",
+												fontSize: "14px",
+												boxSizing: "border-box",
+											}}
+										/>
+									</div>
+								) : (
 									<p
 										style={{
-											margin: "4px 0",
-											fontSize: "13px",
-											color: "#166534",
+											margin: 0,
+											padding: "8px 12px",
+											backgroundColor: "#f9fafb",
+											borderRadius: "6px",
+											fontSize: "14px",
 										}}
 									>
-										🏁 Check-out:{" "}
-										{tour.checkoutTime
-											? formatDate(tour.checkoutTime)
-											: "Zeit nicht verfügbar"}
+										{tour.emergencyContact?.name} -{" "}
+										{tour.emergencyContact?.phone}
 									</p>
 								)}
 							</div>
-						)}
+
+							{/* Status Info */}
+							{(tour.checkedIn || tour.checkedOut) && (
+								<div
+									style={{
+										backgroundColor: "#f0fdf4",
+										border: "1px solid #bbf7d0",
+										padding: "12px",
+										borderRadius: "6px",
+										marginTop: "10px",
+									}}
+								>
+									<h4
+										style={{
+											margin: "0 0 8px 0",
+											fontSize: "14px",
+											fontWeight: "600",
+											color: "#15803d",
+										}}
+									>
+										Check-in/Check-out Status
+									</h4>
+									{tour.checkedIn && (
+										<p
+											style={{
+												margin: "4px 0",
+												fontSize: "13px",
+												color: "#166534",
+											}}
+										>
+											✅ Check-in:{" "}
+											{tour.checkinTime
+												? formatDate(tour.checkinTime)
+												: "Zeit nicht verfügbar"}
+										</p>
+									)}
+									{tour.checkedOut && (
+										<p
+											style={{
+												margin: "4px 0",
+												fontSize: "13px",
+												color: "#166534",
+											}}
+										>
+											🏁 Check-out:{" "}
+											{tour.checkoutTime
+												? formatDate(tour.checkoutTime)
+												: "Zeit nicht verfügbar"}
+										</p>
+									)}
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+
+			{/* Delete Confirmation Dialog */}
+			{showDeleteConfirm && (
+				<div
+					style={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						backgroundColor: "rgba(0, 0, 0, 0.7)",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						zIndex: 1001, // Higher than main modal
+					}}
+					onClick={() => setShowDeleteConfirm(false)}
+				>
+					<div
+						style={{
+							backgroundColor: "white",
+							borderRadius: "12px",
+							padding: "30px",
+							maxWidth: "400px",
+							width: "90%",
+							boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
+						}}
+						onClick={(e) => e.stopPropagation()}
+					>
+						<div style={{ textAlign: "center", marginBottom: "20px" }}>
+							<div
+								style={{
+									fontSize: "48px",
+									marginBottom: "15px",
+								}}
+							>
+								⚠️
+							</div>
+							<h3
+								style={{
+									fontSize: "1.25rem",
+									fontWeight: "600",
+									color: "#dc2626",
+									margin: "0 0 10px 0",
+								}}
+							>
+								Tour löschen
+							</h3>
+							<p
+								style={{
+									color: "#6b7280",
+									margin: 0,
+									lineHeight: "1.5",
+								}}
+							>
+								Sind Sie sicher, dass Sie die Tour{" "}
+								<strong>"{tour.name}"</strong> löschen möchten?
+								<br />
+								Diese Aktion kann nicht rückgängig gemacht werden.
+							</p>
+						</div>
+
+						<div
+							style={{
+								display: "flex",
+								gap: "10px",
+								justifyContent: "center",
+							}}
+						>
+							<button
+								onClick={() => setShowDeleteConfirm(false)}
+								style={{
+									backgroundColor: "#6b7280",
+									color: "white",
+									padding: "10px 20px",
+									border: "none",
+									borderRadius: "6px",
+									fontSize: "14px",
+									cursor: "pointer",
+									fontWeight: "500",
+								}}
+							>
+								Abbrechen
+							</button>
+							<button
+								onClick={handleDelete}
+								disabled={loading}
+								style={{
+									backgroundColor: "#dc2626",
+									color: "white",
+									padding: "10px 20px",
+									border: "none",
+									borderRadius: "6px",
+									fontSize: "14px",
+									cursor: loading ? "not-allowed" : "pointer",
+									opacity: loading ? 0.6 : 1,
+									fontWeight: "500",
+								}}
+							>
+								{loading ? "Lösche..." : "Löschen"}
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
+		</>
 	);
 };
 
