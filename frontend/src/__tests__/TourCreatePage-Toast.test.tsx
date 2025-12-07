@@ -10,24 +10,13 @@ vi.mock("../services/api", () => ({
 	},
 }));
 
-// Mock ToastService
-vi.mock("../services/toastService", () => ({
-	ToastService: {
-		success: vi.fn(),
-		error: vi.fn(),
-		info: vi.fn(),
-		warning: vi.fn(),
-	},
-}));
-
 // Importiere die gemockten Services
-import { ToastService } from "../services/toastService";
 import { tourService } from "../services/api";
 
 // Typings für die Mocks
 const mockTourService = tourService as any;
 
-describe("TourCreatePage - Toast Notifications", () => {
+describe("TourCreatePage - Funktionalität", () => {
 	const defaultProps = {
 		onTourCreated: vi.fn(),
 		onCancel: vi.fn(),
@@ -37,7 +26,7 @@ describe("TourCreatePage - Toast Notifications", () => {
 		vi.clearAllMocks();
 	});
 
-	it("sollte Erfolgs-Toast zeigen wenn Tour erfolgreich erstellt wird", async () => {
+	it("sollte Tour erfolgreich erstellen und onTourCreated aufrufen", async () => {
 		const user = userEvent.setup();
 		const createdTour = {
 			id: "123",
@@ -85,15 +74,10 @@ describe("TourCreatePage - Toast Notifications", () => {
 			});
 
 			expect(defaultProps.onTourCreated).toHaveBeenCalledWith(createdTour);
-
-			// Prüfe dass Erfolgs-Toast angezeigt wird
-			expect(ToastService.success).toHaveBeenCalledWith(
-				`Tour "${createdTour.name}" wurde erfolgreich erstellt!`
-			);
 		});
 	});
 
-	it("sollte Fehler-Toast zeigen bei API-Fehlern", async () => {
+	it("sollte Fehler bei API-Fehlern behandeln", async () => {
 		const user = userEvent.setup();
 
 		mockTourService.createTour.mockRejectedValue(new Error("API Error"));
@@ -119,11 +103,10 @@ describe("TourCreatePage - Toast Notifications", () => {
 		await user.click(submitButton);
 
 		await waitFor(() => {
-			expect(ToastService.error).toHaveBeenCalledWith(
-				"Fehler beim Erstellen der Tour. Bitte versuchen Sie es erneut."
-			);
+			expect(mockTourService.createTour).toHaveBeenCalled();
 		});
 
+		// onTourCreated sollte nicht aufgerufen werden bei einem Fehler
 		expect(defaultProps.onTourCreated).not.toHaveBeenCalled();
 	});
 

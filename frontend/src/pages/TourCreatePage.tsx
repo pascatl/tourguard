@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { tourService } from "../services/api";
 import { Tour } from "../types/api";
-import { ToastService } from "../services/toastService";
 
 interface TourCreatePageProps {
 	onTourCreated?: (tour: Tour) => void;
@@ -97,16 +96,9 @@ const TourCreatePage: React.FC<TourCreatePageProps> = ({
 
 			const newTour = await tourService.createTour(tourData);
 
-			// Erfolgs-Toast anzeigen
-			ToastService.success(
-				`Tour "${newTour.name}" wurde erfolgreich erstellt!`
-			);
-
 			if (onTourCreated) {
 				onTourCreated(newTour);
-			}
-
-			// Reset form
+			} // Reset form
 			setFormData({
 				name: "",
 				description: "",
@@ -119,9 +111,10 @@ const TourCreatePage: React.FC<TourCreatePageProps> = ({
 			});
 		} catch (error: any) {
 			console.error("Fehler beim Erstellen der Tour:", error);
-			ToastService.error(
-				"Fehler beim Erstellen der Tour. Bitte versuchen Sie es erneut."
-			);
+			setErrors({
+				submit:
+					"Fehler beim Erstellen der Tour. Bitte versuchen Sie es erneut.",
+			});
 		} finally {
 			setLoading(false);
 		}
