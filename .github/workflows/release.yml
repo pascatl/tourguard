@@ -30,14 +30,7 @@ jobs:
       # Frontend Tests
       - name: Install Frontend Dependencies
         working-directory: ./frontend
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "Using npm ci with package-lock.json"
-            npm ci
-          else
-            echo "No package-lock.json found, using npm install"
-            npm install
-          fi
+        run: npm install
 
       - name: Run Frontend Tests
         working-directory: ./frontend
@@ -46,14 +39,7 @@ jobs:
       # Backend Tests
       - name: Install Backend Dependencies
         working-directory: ./backend
-        run: |
-          if [ -f package-lock.json ]; then
-            echo "Using npm ci with package-lock.json"
-            npm ci
-          else
-            echo "No package-lock.json found, using npm install"
-            npm install
-          fi
+        run: npm install
 
       - name: Run Backend Tests
         working-directory: ./backend
