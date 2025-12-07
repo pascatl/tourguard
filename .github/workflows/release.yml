@@ -1,0 +1,119 @@
+name: Test and Build Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger bei semantischen Versionstags (v1.0.0, v2.1.3, etc.)
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    name: Test and Build Release
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package-lock.json
+
+      - name: Extract Version from Tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION_NUMBER=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "Building release: $VERSION"
+
+      # Frontend Tests
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm run test -- --run
+
+      # Backend Tests
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: npm test
+
+      # Build Release
+      - name: Build Frontend for Release
+        working-directory: ./frontend
+        env:
+          VITE_APP_VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: npm run build
+
+      - name: Build Backend for Release
+        working-directory: ./backend
+        run: npm run build
+
+      # Create Release Archive
+      - name: Create Release Archive
+        run: |
+          mkdir -p release
+          cp -r frontend/dist release/frontend
+          cp -r backend/dist release/backend
+          cp -r backend/package*.json release/backend/
+          tar -czf tourguard-${{ steps.get_version.outputs.VERSION }}.tar.gz -C release .
+
+      # Upload Release Archive
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tourguard-release-${{ steps.get_version.outputs.VERSION }}
+          path: tourguard-${{ steps.get_version.outputs.VERSION }}.tar.gz
+          retention-days: 30
+
+      # Create GitHub Release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: TourGuard ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## TourGuard Release ${{ steps.get_version.outputs.VERSION }}
+
+            ### What's included
+            - ✅ All tests passed
+            - 📦 Production-ready build
+            - 🎯 Frontend and Backend optimized
+
+            ### Download
+            Use the attached release archive or deploy via your preferred method.
+
+            ### Changelog
+            See the commits since the last release for detailed changes.
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+
+      # Upload Release Asset
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./tourguard-${{ steps.get_version.outputs.VERSION }}.tar.gz
+          asset_name: tourguard-${{ steps.get_version.outputs.VERSION }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: ✅ Release Complete
+        run: |
+          echo "🎉 Release ${{ steps.get_version.outputs.VERSION }} successfully created!"
+          echo "📦 Archive: tourguard-${{ steps.get_version.outputs.VERSION }}.tar.gz"
+          echo "🔗 GitHub Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.get_version.outputs.VERSION }}"
